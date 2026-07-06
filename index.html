@@ -14,7 +14,18 @@
         <div class="score">Очки: <span id="score">0</span></div>
         <button id="restart">Новая игра</button>
       </div>
+      <div class="timer-container">
+        <div id="timer-fill" class="timer-fill"></div>
+      </div>
       <div id="board" class="board"></div>
+    </div>
+    <div id="gameover" class="gameover hidden">
+      <div class="gameover-box">
+        <h2>Игра окончена!</h2>
+        <p id="gameover-reason">Время вышло из-за бездействия</p>
+        <p class="final-score">Ваш счёт: <span id="final-score">0</span></p>
+        <button id="gameover-restart">Играть снова</button>
+      </div>
     </div>
     <script type="module" src="/src/main.js"></script>
   </body>

@@ -2,22 +2,42 @@ import "./style.css";
 
 const SIZE = 8;
 const GEMS = 6;
+const MAX_TIME = 45;
+const TIME_PER_POINT = 0.1;
+const MAX_BONUS_PER_MOVE = 5;
 
 const boardEl = document.getElementById("board");
 const scoreEl = document.getElementById("score");
 const restartBtn = document.getElementById("restart");
+const timerFillEl = document.getElementById("timer-fill");
+const gameoverEl = document.getElementById("gameover");
+const gameoverReasonEl = document.getElementById("gameover-reason");
+const finalScoreEl = document.getElementById("final-score");
+const gameoverRestartBtn = document.getElementById("gameover-restart");
 
 let board = [];
 let selected = null;
 let score = 0;
-let busy = false; // блокировка во время анимаций
+let busy = false;
+let gameOver = false;
+let timeLeftMs = MAX_TIME * 1000;
+let lastTick = 0;
+let timerRAF = null;
 
 function init() {
   board = [];
   score = 0;
   selected = null;
   busy = false;
+  gameOver = false;
   scoreEl.textContent = score;
+
+  gameoverEl.classList.add("hidden");
+
+  // Запускаем таймер
+  timeLeftMs = MAX_TIME * 1000;
+  lastTick = performance.now();
+  startTimerLoop();
 
   // Генерируем поле без начальных совпадений
   for (let r = 0; r < SIZE; r++) {
@@ -62,7 +82,8 @@ function getCell(r, c) {
 }
 
 function onCellClick(e) {
-  if (busy) return;
+  if (busy || gameOver) return;
+
   const r = +e.currentTarget.dataset.row;
   const c = +e.currentTarget.dataset.col;
 
@@ -94,12 +115,14 @@ function onCellClick(e) {
 // Обмен
 async function trySwap(r1, c1, r2, c2) {
   busy = true;
+  const scoreBefore = score;
+
   swap(r1, c1, r2, c2);
   render();
 
   const matches = findMatches();
   if (matches.size === 0) {
-    // Возврат
+    // Возврат — время не пополняется
     await sleep(250);
     swap(r1, c1, r2, c2);
     render();
@@ -107,6 +130,23 @@ async function trySwap(r1, c1, r2, c2) {
     await resolveMatches();
   }
   busy = false;
+
+  if (!gameOver) {
+    // Пополняем время в зависимости от заработанных очков
+    const earned = score - scoreBefore;
+    if (earned > 0) {
+      const bonusMs = Math.min(
+        earned * TIME_PER_POINT * 1000,
+        MAX_BONUS_PER_MOVE * 1000,
+      );
+      addTime(bonusMs);
+    }
+
+    // Проверяем, есть ли ещё возможные ходы
+    if (!hasPossibleMoves()) {
+      endGame("Больше нет возможных ходов!");
+    }
+  }
 }
 
 function swap(r1, c1, r2, c2) {
@@ -156,6 +196,29 @@ function findMatches() {
   }
 
   return matched;
+}
+
+// Проверка: есть ли хоть один возможный ход
+function hasPossibleMoves() {
+  for (let r = 0; r < SIZE; r++) {
+    for (let c = 0; c < SIZE; c++) {
+      // Свап вправо
+      if (c < SIZE - 1) {
+        swap(r, c, r, c + 1);
+        const has = findMatches().size > 0;
+        swap(r, c, r, c + 1);
+        if (has) return true;
+      }
+      // Свап вниз
+      if (r < SIZE - 1) {
+        swap(r, c, r + 1, c);
+        const has = findMatches().size > 0;
+        swap(r, c, r + 1, c);
+        if (has) return true;
+      }
+    }
+  }
+  return false;
 }
 
 // Разрешение совпадений
@@ -250,6 +313,62 @@ function sleep(ms) {
   return new Promise((res) => setTimeout(res, ms));
 }
 
+function startTimerLoop() {
+  if (timerRAF) cancelAnimationFrame(timerRAF);
+
+  function tick(now) {
+    if (gameOver) return;
+
+    const delta = now - lastTick;
+    lastTick = now;
+    timeLeftMs -= delta;
+
+    if (timeLeftMs <= 0) {
+      timeLeftMs = 0;
+      updateTimerBar();
+      endGame("Время вышло из-за бездействия!");
+      return;
+    }
+
+    updateTimerBar();
+    timerRAF = requestAnimationFrame(tick);
+  }
+
+  timerRAF = requestAnimationFrame(tick);
+}
+
+function updateTimerBar() {
+  const maxMs = MAX_TIME * 1000;
+  const percent = (timeLeftMs / maxMs) * 100;
+  timerFillEl.style.width = percent + "%";
+
+  // Меняем цвет при малом времени
+  if (percent < 25) {
+    timerFillEl.classList.add("urgent");
+  } else {
+    timerFillEl.classList.remove("urgent");
+  }
+}
+
+function addTime(ms) {
+  timeLeftMs += ms;
+  const maxMs = MAX_TIME * 1000;
+  if (timeLeftMs > maxMs) timeLeftMs = maxMs;
+}
+
+function endGame(reason) {
+  gameOver = true;
+  busy = true;
+  if (timerRAF) {
+    cancelAnimationFrame(timerRAF);
+    timerRAF = null;
+  }
+  gameoverReasonEl.textContent = reason;
+  finalScoreEl.textContent = score;
+  gameoverEl.classList.remove("hidden");
+}
+
 restartBtn.addEventListener("click", init);
+gameoverRestartBtn.addEventListener("click", init);
 
 init();

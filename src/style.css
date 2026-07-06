@@ -19,7 +19,6 @@ body {
   background: rgba(0, 0, 0, 0.3);
   border-radius: 20px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-
   backdrop-filter: blur(10px);
 }
 
@@ -28,16 +27,51 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
-
-  gap: 15px;
+  gap: 10px;
 }
 
 .score {
-  padding: 8px 18px;
+  padding: 8px 14px;
   font-weight: bold;
-  font-size: 1.4em;
+  font-size: 1.2em;
   background: rgba(255, 255, 255, 0.15);
   border-radius: 10px;
+}
+
+.timer-container {
+  width: 100%;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.timer-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #00f5d4, #00d4aa, #00b894);
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 245, 212, 0.5);
+  transition: width 0.1s linear;
+}
+
+.timer-fill.urgent {
+  background: linear-gradient(90deg, #ff6b6b, #ff0000, #ff4757);
+  box-shadow: 0 0 15px rgba(255, 50, 50, 0.7);
+  animation: pulse-bar 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse-bar {
+  from {
+    opacity: 0.8;
+    box-shadow: 0 0 10px rgba(255, 50, 50, 0.5);
+  }
+  to {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(255, 50, 50, 0.9);
+  }
 }
 
 button {
@@ -65,7 +99,6 @@ button:hover {
   padding: 8px;
   background: rgba(0, 0, 0, 0.4);
   border-radius: 12px;
-
   gap: 6px;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
@@ -165,4 +198,64 @@ button:hover {
     transform: translateY(0) scaleY(1) scaleX(1);
     opacity: 1;
   }
+}
+
+.gameover {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.4s ease;
+}
+
+.gameover.hidden {
+  display: none;
+}
+
+.gameover-box {
+  background: linear-gradient(135deg, #1e3c72, #6a11cb);
+  padding: 40px 50px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+  animation: scaleIn 0.4s ease;
+}
+
+.gameover-box h2 {
+  font-size: 2em;
+  margin-bottom: 10px;
+  color: #ff6b6b;
+}
+
+.gameover-box p {
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+.final-score {
+  font-size: 1.6em !important;
+  font-weight: bold;
+  margin: 15px 0 !important;
+  color: #ffd700;
+}
+
+.gameover-box button {
+  margin-top: 10px;
+  padding: 12px 30px;
+  font-size: 1.1em;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.7); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
 }
