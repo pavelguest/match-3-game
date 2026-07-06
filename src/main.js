@@ -1,3 +1,5 @@
+import "./style.css";
+
 const SIZE = 8;
 const GEMS = 6;
 
