@@ -72,6 +72,10 @@ function render() {
       cell.appendChild(gem);
 
       cell.addEventListener("click", onCellClick);
+      cell.addEventListener("touchstart", onTouchStart, { passive: false });
+      cell.addEventListener("touchmove", onTouchMove, { passive: false });
+      cell.addEventListener("touchend", onTouchEnd);
+
       boardEl.appendChild(cell);
     }
   }
@@ -82,7 +86,10 @@ function getCell(r, c) {
 }
 
 function onCellClick(e) {
-  if (busy || gameOver) return;
+  if (busy || gameOver || ignoreNextClick) {
+    ignoreNextClick = false;
+    return;
+  }
 
   const r = +e.currentTarget.dataset.row;
   const c = +e.currentTarget.dataset.col;
@@ -110,6 +117,90 @@ function onCellClick(e) {
     return;
   }
   selected = null;
+}
+
+// Переменные для отслеживания состояния свайпа
+let touchStartX = 0;
+let touchStartY = 0;
+let touchStartR = -1;
+let touchStartC = -1;
+let isSwiping = false;
+let ignoreNextClick = false; // Флаг, чтобы предотвратить двойное срабатывание (свайп + клик)
+
+function onTouchStart(e) {
+  if (busy || gameOver) return;
+  const touch = e.touches[0];
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+  touchStartR = +e.currentTarget.dataset.row;
+  touchStartC = +e.currentTarget.dataset.col;
+  isSwiping = false;
+
+  e.currentTarget.classList.add("selected");
+}
+
+function onTouchMove(e) {
+  if (touchStartR === -1) return;
+  const touch = e.touches[0];
+  const deltaX = touch.clientX - touchStartX;
+  const deltaY = touch.clientY - touchStartY;
+
+  // Если палец сдвинулся больше чем на 10px, считаем это началом свайпа
+  if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) > 10) {
+    isSwiping = true;
+    // Предотвращаем прокрутку страницы, если свайп происходит внутри поля
+    e.preventDefault();
+  }
+}
+
+function onTouchEnd(e) {
+  if (busy || gameOver || touchStartR === -1) return;
+
+  const startCell = getCell(touchStartR, touchStartC);
+  if (startCell) {
+    startCell.classList.remove("selected");
+  }
+
+  if (isSwiping) {
+    // Блокируем последующий клик, чтобы не сработала логика выделения
+    ignoreNextClick = true;
+    setTimeout(() => {
+      ignoreNextClick = false;
+    }, 500);
+
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX;
+    const deltaY = touch.clientY - touchStartY;
+
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    const threshold = 20; // Минимальная длина свайпа в пикселях для совершения хода
+
+    if (Math.max(absX, absY) >= threshold) {
+      let targetR = touchStartR;
+      let targetC = touchStartC;
+
+      // Определяем приоритетное направление свайпа
+      if (absX > absY) {
+        if (deltaX > 0)
+          targetC++; // Свайп вправо
+        else targetC--; // Свайп влево
+      } else {
+        if (deltaY > 0)
+          targetR++; // Свайп вниз
+        else targetR--; // Свайп вверх
+      }
+
+      // Проверяем, что целевая клетка находится в пределах поля
+      if (targetR >= 0 && targetR < SIZE && targetC >= 0 && targetC < SIZE) {
+        trySwap(touchStartR, touchStartC, targetR, targetC);
+      }
+    }
+  }
+
+  // Сбрасываем состояние
+  touchStartR = -1;
+  isSwiping = false;
 }
 
 // Обмен
