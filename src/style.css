@@ -1,3 +1,9 @@
+:root {
+  --bg: #f4f6f8;
+  --game-bg: #ffffff;
+  --text: #1f2937;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -9,18 +15,15 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  color: #ffffff;
-  background: linear-gradient(135deg, #1e3c72, #2a5298, #6a11cb);
+  color: var(--text);
+  background: var(--bg);
 }
 
 .game {
   padding: 10px;
   text-align: center;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-
-  backdrop-filter: blur(10px);
+  background: var(--game-bg);
+  border-radius: 10px;
 }
 
 .info {
@@ -33,11 +36,8 @@ body {
 }
 
 .score {
-  padding: 8px 14px;
   font-weight: bold;
-  font-size: 1.2em;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 10px;
+  font-size: 20px;
 }
 
 .timer-container {
@@ -45,9 +45,8 @@ body {
   height: 14px;
   margin-bottom: 12px;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.3);
   border-radius: 8px;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .timer-fill {
@@ -55,42 +54,37 @@ body {
   height: 100%;
   background: linear-gradient(90deg, #00f5d4, #00d4aa, #00b894);
   border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 245, 212, 0.5);
   transition: width 0.1s linear;
 }
 
 .timer-fill.urgent {
   background: linear-gradient(90deg, #ff6b6b, #ff0000, #ff4757);
-  box-shadow: 0 0 15px rgba(255, 50, 50, 0.7);
   animation: pulse-bar 0.5s ease-in-out infinite alternate;
 }
 
 @keyframes pulse-bar {
   from {
-    box-shadow: 0 0 10px rgba(255, 50, 50, 0.5);
     opacity: 0.8;
   }
   to {
-    box-shadow: 0 0 20px rgba(255, 50, 50, 0.9);
     opacity: 1;
   }
 }
 
 button {
-  padding: 10px 20px;
-  font-weight: bold;
-  font-size: 1em;
+  margin-top: 8px;
+  padding: 12px 24px;
+  font-size: 16px;
   color: #ffffff;
-  background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+  background: linear-gradient( to bottom, #ed435a 0%, #ed1a3d 70%, #ed435a 100%);
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
 }
 
 button:hover {
-  box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
-  transform: translateY(-2px);
+  transform: scale(1.05);
+  transition: all 0.3s ease;
 }
 
 .board {
@@ -99,7 +93,7 @@ button:hover {
   height: min(90vw, 480px);
   margin: 0 auto;
   padding: 8px;
-  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.3);
   border-radius: 12px;
 
   gap: 6px;
@@ -132,27 +126,27 @@ button:hover {
 }
 
 .gem-0 {
-  background: linear-gradient(135deg, #ff006e, #9c002b);
+  background: linear-gradient(#ED4158, #FE5F74);
 }
 
 .gem-1 {
-  background: linear-gradient(135deg, #00f5d4, #00856a);
+  background: linear-gradient(#01A770, #6AD593);
 }
 
 .gem-2 {
-  background: linear-gradient(135deg, #0077ff, #002b99);
+  background: linear-gradient(#6DCFF6, #ACCEED);
 }
 
 .gem-3 {
-  background: linear-gradient(135deg, #f9ca24, #ebbe0b);
+  background: linear-gradient(#FFBF05, #FFF004);
 }
 
 .gem-4 {
-  background: linear-gradient(135deg, #be2edd, #6c1b8a);
+  background: linear-gradient(#7232CE, #BA89FF);
 }
 
 .gem-5 {
-  background: linear-gradient(135deg, #d37d1a, #9a4800);
+  background: linear-gradient(#FA7704, #FF973C);
 }
 
 .cell:hover {
@@ -225,37 +219,26 @@ button:hover {
 }
 
 .gameover-box {
-  padding: 40px 50px;
+  padding: 30px;
   text-align: center;
-  background: linear-gradient(135deg, #1e3c72, #6a11cb);
-  border-radius: 20px;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+  background: #ffffff;
+  border-radius: 10px;
   animation: scaleIn 0.4s ease;
 }
 
 .gameover-box h2 {
-  margin-bottom: 10px;
-  font-size: 2em;
-  color: #ff6b6b;
+  margin-bottom: 8px;
+  font-size: 20px;
 }
 
 .gameover-box p {
   margin-bottom: 8px;
-  font-size: 1.1em;
-  opacity: 0.9;
+  font-size: 18px;
 }
 
 .final-score {
-  margin: 15px 0 !important;
   font-weight: bold;
-  font-size: 1.6em !important;
-  color: #ffd700;
-}
-
-.gameover-box button {
-  margin-top: 10px;
-  padding: 12px 30px;
-  font-size: 1.1em;
+  font-size: 20px;
 }
 
 @keyframes fadeIn {

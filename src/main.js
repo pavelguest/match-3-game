@@ -417,7 +417,7 @@ function startTimerLoop() {
     if (timeLeftMs <= 0) {
       timeLeftMs = 0;
       updateTimerBar();
-      endGame("Время вышло из-за бездействия!");
+      endGame("Время истекло");
       return;
     }
 
