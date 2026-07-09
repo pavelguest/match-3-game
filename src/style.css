@@ -17,6 +17,8 @@ body {
   min-height: 100vh;
   color: var(--text);
   background: var(--bg);
+
+  overscroll-behavior: none;
 }
 
 .game {
@@ -24,6 +26,10 @@ body {
   text-align: center;
   background: var(--game-bg);
   border-radius: 10px;
+  -webkit-user-select: none;
+          user-select: none;
+
+  touch-action: none;
 }
 
 .info {
@@ -99,10 +105,6 @@ button:hover {
   gap: 6px;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  /* Предотвращаем overscroll-эффекты */
-  overscroll-behavior: none;
-  /* Запрещаем все стандартные touch-жесты браузера внутри игрового поля */
-  touch-action: none;
 }
 
 .cell {
@@ -126,27 +128,27 @@ button:hover {
 }
 
 .gem-0 {
-  background: linear-gradient(#ED4158, #FE5F74);
+  background: linear-gradient(#ed4158, #fe5f74);
 }
 
 .gem-1 {
-  background: linear-gradient(#01A770, #6AD593);
+  background: linear-gradient(#01a770, #6ad593);
 }
 
 .gem-2 {
-  background: linear-gradient(#6DCFF6, #ACCEED);
+  background: linear-gradient(#6dcff6, #acceed);
 }
 
 .gem-3 {
-  background: linear-gradient(#FFBF05, #FFF004);
+  background: linear-gradient(#ffbf05, #fff004);
 }
 
 .gem-4 {
-  background: linear-gradient(#7232CE, #BA89FF);
+  background: linear-gradient(#7232ce, #ba89ff);
 }
 
 .gem-5 {
-  background: linear-gradient(#FA7704, #FF973C);
+  background: linear-gradient(#fa7704, #ff973c);
 }
 
 .cell:hover {
