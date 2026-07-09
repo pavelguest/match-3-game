@@ -95,11 +95,19 @@ function onPointerDown(e) {
 
   if (busy || gameOver) return;
 
-  const cell = getCellFromPoint(e.clientX, e.clientY);
-  if (!cell) return;
+  boardEl.setPointerCapture(e.pointerId);
 
   pointerStartX = e.clientX;
   pointerStartY = e.clientY;
+
+  const cell = getCellFromPoint(e.clientX, e.clientY);
+
+  if (!cell) {
+    pointerStartR = -1;
+    pointerStartC = -1;
+    isPointerMoving = false;
+    return;
+  }
 
   pointerStartR = +cell.dataset.row;
   pointerStartC = +cell.dataset.col;
@@ -107,21 +115,25 @@ function onPointerDown(e) {
   isPointerMoving = false;
 
   cell.classList.add("selected");
-
-  // захватываем палец/мышь
-  boardEl.setPointerCapture(e.pointerId);
 }
 
 function onPointerMove(e) {
-  if (pointerStartR === -1) return;
+  if (pointerStartR === -1) {
+    const cell = getCellFromPoint(e.clientX, e.clientY);
+
+    if (!cell) return;
+
+    pointerStartR = +cell.dataset.row;
+    pointerStartC = +cell.dataset.col;
+
+    cell.classList.add("selected");
+  }
 
   const dx = e.clientX - pointerStartX;
   const dy = e.clientY - pointerStartY;
 
   if (Math.max(Math.abs(dx), Math.abs(dy)) > 10) {
     isPointerMoving = true;
-
-    // запрещаем скролл страницы
     e.preventDefault();
   }
 }
