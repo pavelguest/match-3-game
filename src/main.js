@@ -70,12 +70,6 @@ function render() {
       const gem = document.createElement("div");
       gem.className = `gem gem-${board[r][c]}`;
       cell.appendChild(gem);
-
-      cell.addEventListener("click", onCellClick);
-      cell.addEventListener("touchstart", onTouchStart, { passive: false });
-      cell.addEventListener("touchmove", onTouchMove, { passive: false });
-      cell.addEventListener("touchend", onTouchEnd);
-
       boardEl.appendChild(cell);
     }
   }
@@ -85,18 +79,22 @@ function getCell(r, c) {
   return boardEl.querySelector(`[data-row="${r}"][data-col="${c}"]`);
 }
 
-function onCellClick(e) {
+function onBoardClick(e) {
   if (busy || gameOver || ignoreNextClick) {
     ignoreNextClick = false;
     return;
   }
 
-  const r = +e.currentTarget.dataset.row;
-  const c = +e.currentTarget.dataset.col;
+  // Находим ячейку под курсором
+  const cell = e.target.closest(".cell");
+  if (!cell) return; // Клик попал в зазор или вне ячейки
+
+  const r = +cell.dataset.row;
+  const c = +cell.dataset.col;
 
   if (!selected) {
     selected = { r, c };
-    e.currentTarget.classList.add("selected");
+    cell.classList.add("selected");
     return;
   }
 
@@ -113,7 +111,7 @@ function onCellClick(e) {
   } else {
     // Выбрать новую клетку
     selected = { r, c };
-    e.currentTarget.classList.add("selected");
+    cell.classList.add("selected");
     return;
   }
   selected = null;
@@ -129,14 +127,26 @@ let ignoreNextClick = false; // Флаг, чтобы предотвратить 
 
 function onTouchStart(e) {
   if (busy || gameOver) return;
+
   const touch = e.touches[0];
+
+  // Находим элемент под пальцем и поднимаемся до .cell
+  const target = document.elementFromPoint(touch.clientX, touch.clientY);
+  const cell = target ? target.closest(".cell") : null;
+
+  if (!cell) {
+    // Если палец попал в зазор или вне ячейки, сбрасываем состояние
+    touchStartR = -1;
+    return;
+  }
+
   touchStartX = touch.clientX;
   touchStartY = touch.clientY;
-  touchStartR = +e.currentTarget.dataset.row;
-  touchStartC = +e.currentTarget.dataset.col;
+  touchStartR = +cell.dataset.row;
+  touchStartC = +cell.dataset.col;
   isSwiping = false;
 
-  e.currentTarget.classList.add("selected");
+  cell.classList.add("selected");
 }
 
 function onTouchMove(e) {
@@ -458,6 +468,11 @@ function endGame(reason) {
   finalScoreEl.textContent = score;
   gameoverEl.classList.remove("hidden");
 }
+
+boardEl.addEventListener("click", onBoardClick);
+boardEl.addEventListener("touchstart", onTouchStart, { passive: false });
+boardEl.addEventListener("touchmove", onTouchMove, { passive: false });
+boardEl.addEventListener("touchend", onTouchEnd);
 
 restartBtn.addEventListener("click", init);
 gameoverRestartBtn.addEventListener("click", init);
