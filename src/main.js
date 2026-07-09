@@ -91,9 +91,7 @@ function getCellFromPoint(x, y) {
 }
 
 function onPointerDown(e) {
-  if (!e.isPrimary) return;
-
-  if (busy || gameOver) return;
+  if (!e.isPrimary || busy || gameOver) return;
 
   boardEl.setPointerCapture(e.pointerId);
 
@@ -480,6 +478,14 @@ boardEl.addEventListener("pointerdown", onPointerDown);
 boardEl.addEventListener("pointermove", onPointerMove, { passive: false });
 boardEl.addEventListener("pointerup", onPointerUp);
 boardEl.addEventListener("pointercancel", resetPointer);
+boardEl.addEventListener(
+  "touchmove",
+  function (e) {
+    e.stopPropagation();
+    e.preventDefault();
+  },
+  { passive: false },
+);
 
 restartBtn.addEventListener("click", init);
 gameoverRestartBtn.addEventListener("click", init);
