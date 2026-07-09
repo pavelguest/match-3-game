@@ -79,18 +79,98 @@ function getCell(r, c) {
   return boardEl.querySelector(`[data-row="${r}"][data-col="${c}"]`);
 }
 
-function onBoardClick(e) {
-  if (busy || gameOver || ignoreNextClick) {
-    ignoreNextClick = false;
+let pointerStartX = 0;
+let pointerStartY = 0;
+let pointerStartR = -1;
+let pointerStartC = -1;
+let isPointerMoving = false;
+
+function getCellFromPoint(x, y) {
+  const target = document.elementFromPoint(x, y);
+  return target ? target.closest(".cell") : null;
+}
+
+function onPointerDown(e) {
+  if (!e.isPrimary) return;
+
+  if (busy || gameOver) return;
+
+  const cell = getCellFromPoint(e.clientX, e.clientY);
+  if (!cell) return;
+
+  pointerStartX = e.clientX;
+  pointerStartY = e.clientY;
+
+  pointerStartR = +cell.dataset.row;
+  pointerStartC = +cell.dataset.col;
+
+  isPointerMoving = false;
+
+  cell.classList.add("selected");
+
+  // захватываем палец/мышь
+  boardEl.setPointerCapture(e.pointerId);
+}
+
+function onPointerMove(e) {
+  if (pointerStartR === -1) return;
+
+  const dx = e.clientX - pointerStartX;
+  const dy = e.clientY - pointerStartY;
+
+  if (Math.max(Math.abs(dx), Math.abs(dy)) > 10) {
+    isPointerMoving = true;
+
+    // запрещаем скролл страницы
+    e.preventDefault();
+  }
+}
+
+function onPointerUp(e) {
+  const startCell = getCell(pointerStartR, pointerStartC);
+
+  if (startCell) {
+    startCell.classList.remove("selected");
+  }
+
+  if (busy || gameOver || pointerStartR === -1) {
+    resetPointer();
     return;
   }
 
-  // Находим ячейку под курсором
-  const cell = e.target.closest(".cell");
-  if (!cell) return; // Клик попал в зазор или вне ячейки
+  const dx = e.clientX - pointerStartX;
+  const dy = e.clientY - pointerStartY;
 
-  const r = +cell.dataset.row;
-  const c = +cell.dataset.col;
+  if (isPointerMoving) {
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    const threshold = 20;
+
+    if (Math.max(absX, absY) >= threshold) {
+      let targetR = pointerStartR;
+      let targetC = pointerStartC;
+
+      if (absX > absY) {
+        targetC += dx > 0 ? 1 : -1;
+      } else {
+        targetR += dy > 0 ? 1 : -1;
+      }
+
+      if (targetR >= 0 && targetR < SIZE && targetC >= 0 && targetC < SIZE) {
+        trySwap(pointerStartR, pointerStartC, targetR, targetC);
+      }
+    }
+  } else {
+    handleCellClick(pointerStartR, pointerStartC);
+  }
+
+  resetPointer();
+}
+
+function handleCellClick(r, c) {
+  const cell = getCell(r, c);
+  if (!cell) return;
 
   if (!selected) {
     selected = { r, c };
@@ -99,118 +179,33 @@ function onBoardClick(e) {
   }
 
   const prev = getCell(selected.r, selected.c);
-  prev.classList.remove("selected");
+
+  if (prev) {
+    prev.classList.remove("selected");
+  }
 
   // Проверяем, что клетки соседние
   const dr = Math.abs(selected.r - r);
   const dc = Math.abs(selected.c - c);
+
   if (dr + dc === 1) {
     trySwap(selected.r, selected.c, r, c);
+
+    selected = null;
   } else if (selected.r === r && selected.c === c) {
     // Клик по той же — снять выделение
+    selected = null;
   } else {
     // Выбрать новую клетку
     selected = { r, c };
     cell.classList.add("selected");
-    return;
-  }
-  selected = null;
-}
-
-// Переменные для отслеживания состояния свайпа
-let touchStartX = 0;
-let touchStartY = 0;
-let touchStartR = -1;
-let touchStartC = -1;
-let isSwiping = false;
-let ignoreNextClick = false; // Флаг, чтобы предотвратить двойное срабатывание (свайп + клик)
-
-function onTouchStart(e) {
-  if (busy || gameOver) return;
-
-  const touch = e.touches[0];
-
-  // Находим элемент под пальцем и поднимаемся до .cell
-  const target = document.elementFromPoint(touch.clientX, touch.clientY);
-  const cell = target ? target.closest(".cell") : null;
-
-  if (!cell) {
-    // Если палец попал в зазор или вне ячейки, сбрасываем состояние
-    touchStartR = -1;
-    return;
-  }
-
-  touchStartX = touch.clientX;
-  touchStartY = touch.clientY;
-  touchStartR = +cell.dataset.row;
-  touchStartC = +cell.dataset.col;
-  isSwiping = false;
-
-  cell.classList.add("selected");
-}
-
-function onTouchMove(e) {
-  if (touchStartR === -1) return;
-  const touch = e.touches[0];
-  const deltaX = touch.clientX - touchStartX;
-  const deltaY = touch.clientY - touchStartY;
-
-  // Если палец сдвинулся больше чем на 10px, считаем это началом свайпа
-  if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) > 10) {
-    isSwiping = true;
-    // Предотвращаем прокрутку страницы, если свайп происходит внутри поля
-    e.preventDefault();
   }
 }
 
-function onTouchEnd(e) {
-  if (busy || gameOver || touchStartR === -1) return;
-
-  const startCell = getCell(touchStartR, touchStartC);
-  if (startCell) {
-    startCell.classList.remove("selected");
-  }
-
-  if (isSwiping) {
-    // Блокируем последующий клик, чтобы не сработала логика выделения
-    ignoreNextClick = true;
-    setTimeout(() => {
-      ignoreNextClick = false;
-    }, 500);
-
-    const touch = e.changedTouches[0];
-    const deltaX = touch.clientX - touchStartX;
-    const deltaY = touch.clientY - touchStartY;
-
-    const absX = Math.abs(deltaX);
-    const absY = Math.abs(deltaY);
-    const threshold = 20; // Минимальная длина свайпа в пикселях для совершения хода
-
-    if (Math.max(absX, absY) >= threshold) {
-      let targetR = touchStartR;
-      let targetC = touchStartC;
-
-      // Определяем приоритетное направление свайпа
-      if (absX > absY) {
-        if (deltaX > 0)
-          targetC++; // Свайп вправо
-        else targetC--; // Свайп влево
-      } else {
-        if (deltaY > 0)
-          targetR++; // Свайп вниз
-        else targetR--; // Свайп вверх
-      }
-
-      // Проверяем, что целевая клетка находится в пределах поля
-      if (targetR >= 0 && targetR < SIZE && targetC >= 0 && targetC < SIZE) {
-        trySwap(touchStartR, touchStartC, targetR, targetC);
-      }
-    }
-  }
-
-  // Сбрасываем состояние
-  touchStartR = -1;
-  isSwiping = false;
+function resetPointer() {
+  pointerStartR = -1;
+  pointerStartC = -1;
+  isPointerMoving = false;
 }
 
 // Обмен
@@ -469,10 +464,10 @@ function endGame(reason) {
   gameoverEl.classList.remove("hidden");
 }
 
-boardEl.addEventListener("click", onBoardClick);
-boardEl.addEventListener("touchstart", onTouchStart, { passive: false });
-boardEl.addEventListener("touchmove", onTouchMove, { passive: false });
-boardEl.addEventListener("touchend", onTouchEnd);
+boardEl.addEventListener("pointerdown", onPointerDown);
+boardEl.addEventListener("pointermove", onPointerMove, { passive: false });
+boardEl.addEventListener("pointerup", onPointerUp);
+boardEl.addEventListener("pointercancel", resetPointer);
 
 restartBtn.addEventListener("click", init);
 gameoverRestartBtn.addEventListener("click", init);
